@@ -1,3 +1,5 @@
+"""Logging utility module for the recommender system."""
+
 import logging
 from pathlib import Path
 from typing import Optional

@@ -77,6 +77,7 @@ clean: ## Cleans up the local-development environment except .env
 	rm -rf .vscode
 	rm -rf .venv
 	rm -f poetry.lock
+	rm -rf experiment_results
 
 merge-poetry-lock: ## Merges conflicted poetry.lock
 	git diff --quiet pyproject.toml	# Ensure no unstaged change in pyproject.toml
@@ -123,11 +124,11 @@ lint-flake8: ## Checks if .py files follow flake8
 
 lint-pylint: ## Checks if .py files follow pylint
 	@echo "Checking pylint errors"
-	pylint --recursive=y --rcfile ./pyproject.toml .
+	pylint .
 
 lint-pylint-with-report-txt: ## Checks if .py files follow pylint and generates pylint-output.txt
 	@echo "Checking pylint errors and generating pylint-output.txt"
-	set -o pipefail && pylint --recursive=y . | tee pylint-output.txt
+	set -o pipefail && pylint . | tee pylint-output.txt
 
 check-lint: lint-flake8 lint-pylint ## Checks all linting issues
 

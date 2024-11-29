@@ -1,3 +1,5 @@
+"""Experiment runner module for testing different configurations."""
+
 import json
 from pathlib import Path
 from typing import Any, Dict, List
@@ -15,7 +17,7 @@ def create_experiment_configs() -> List[Dict[str, Any]]:
     Returns:
         List[Dict[str, Any]]: List of configuration dictionaries
     """
-    experiments = []
+    experiments = []  # pylint: disable=redefined-outer-name
 
     # Experiment 1: Default configuration
     config_manager = ConfigManager()
@@ -42,53 +44,54 @@ def create_experiment_configs() -> List[Dict[str, Any]]:
 
 
 def run_experiments(
-    output_dir: Path, experiments: List[Dict[str, Any]]
+    experiment_dir: Path, experiment_configs: List[Dict[str, Any]]
 ) -> pd.DataFrame:
     """
     Run multiple experiments with different configurations.
 
     Args:
-        output_dir (Path): Directory to save results
-        experiments (List[Dict[str, Any]]): List of experiment configurations
+        experiment_dir (Path): Directory to save results
+        experiment_configs (List[Dict[str, Any]]): List of experiment
+        configurations
 
     Returns:
         pd.DataFrame: DataFrame containing experiment results
     """
-    results = []
+    experiment_results = []
 
-    for experiment in experiments:
-        print(f"\nRunning experiment: {experiment['name']}")
+    for exp_config in experiment_configs:
+        print(f"\nRunning experiment: {exp_config['name']}")
 
         # Create output directory for experiment
-        exp_dir = output_dir / experiment["name"]
+        exp_dir = experiment_dir / exp_config["name"]
         exp_dir.mkdir(parents=True, exist_ok=True)
 
         # Update config and run pipeline
         config_manager = ConfigManager(exp_dir / "config.yaml")
-        config_manager.update_config(experiment["config"])
+        config_manager.update_config(exp_config["config"])
 
         pipeline = RecommenderPipeline(
             config_path=exp_dir / "config.yaml", output_path=exp_dir
         )
-        exp_results = pipeline.run()
+        current_results = pipeline.run()
 
-        # Save detailed results
-        with open(exp_dir / "results.json", "w") as f:
-            json.dump(exp_results, f, indent=4)
-
-        # Collect summary results
-        for metric, value in exp_results["mean_metrics"].items():
-            std = exp_results["std_metrics"][metric]
-            results.append(
+        # Add results to experiment_results list
+        for metric, mean_value in current_results["mean_metrics"].items():
+            std_value = current_results["std_metrics"][metric]
+            experiment_results.append(
                 {
-                    "experiment": experiment["name"],
+                    "experiment": exp_config["name"],
                     "metric": metric,
-                    "mean": value,
-                    "std": std,
+                    "mean": mean_value,
+                    "std": std_value,
                 }
             )
 
-    return pd.DataFrame(results)
+        # Save detailed results
+        with open(exp_dir / "results.json", "w", encoding="utf-8") as f:
+            json.dump(current_results, f, indent=4)
+
+    return pd.DataFrame(experiment_results)
 
 
 if __name__ == "__main__":

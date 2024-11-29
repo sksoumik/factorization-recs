@@ -1,10 +1,12 @@
+"""Model factory module for creating recommender instances."""
+
 from typing import Any, Dict, Optional
 
 from models.base_model import BaseRecommender
 from models.lightfm_model import LightFMRecommender
 from utils.logger import Logger
 
-logger = Logger.get_logger()
+LOGGER = Logger.get_logger()
 
 
 class ModelFactory:
@@ -32,7 +34,7 @@ class ModelFactory:
             ValueError: If model_type is not supported
         """
         if model_type not in cls._models:
-            logger.error(f"Unsupported model type: {model_type}")
+            LOGGER.error(f"Unsupported model type: {model_type}")
             raise ValueError(
                 f"Unsupported model type: {model_type}. "
                 f"Available models: {list(cls._models.keys())}"
@@ -42,9 +44,9 @@ class ModelFactory:
         params = model_params or {}
 
         try:
-            logger.info(f"Creating {model_type} model with params: {params}")
+            LOGGER.info(f"Creating {model_type} model with params: {params}")
             return model_class(**params)
 
         except Exception as e:
-            logger.error(f"Error creating model: {str(e)}")
+            LOGGER.error(f"Error creating model: {str(e)}")
             raise

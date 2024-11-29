@@ -1,3 +1,5 @@
+"""Evaluator module for recommender system models."""
+
 from typing import Dict, List, Optional, Tuple
 
 import numpy as np
@@ -8,7 +10,7 @@ from evaluation.metrics import RecommenderMetrics
 from models.base_model import BaseRecommender
 from utils.logger import Logger
 
-logger = Logger.get_logger()
+LOGGER = Logger.get_logger()
 
 
 class RecommenderEvaluator:
@@ -33,6 +35,7 @@ class RecommenderEvaluator:
         self.metrics_computer = RecommenderMetrics()
 
     def evaluate_fold(
+        # pylint: disable=too-many-arguments
         self,
         model: BaseRecommender,
         train_matrix: csr_matrix,
@@ -138,7 +141,7 @@ class RecommenderEvaluator:
         for fold_idx, (train_idx, test_idx) in enumerate(
             kf.split(range(interaction_matrix.shape[0]))
         ):
-            logger.info(f"Evaluating fold {fold_idx + 1}/{n_folds}")
+            LOGGER.info(f"Evaluating fold {fold_idx + 1}/{n_folds}")
 
             # Split data
             train_matrix = interaction_matrix[train_idx]

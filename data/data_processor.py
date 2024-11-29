@@ -1,3 +1,5 @@
+"""Data processing module for preparing recommender system data."""
+
 from typing import Any, Dict, Tuple
 
 import pandas as pd
@@ -5,7 +7,7 @@ from scipy.sparse import csr_matrix
 
 from utils.logger import Logger
 
-logger = Logger.get_logger()
+LOGGER = Logger.get_logger()
 
 
 class DataProcessor:
@@ -100,7 +102,7 @@ class DataProcessor:
         cols = []
         data = []
 
-        for idx, row in df.iterrows():
+        for _, row in df.iterrows():
             entity_idx = id_mapping[row[id_col]]
 
             for col in categorical_cols:
@@ -137,7 +139,7 @@ class DataProcessor:
                 - item features matrix (csr_matrix)
                 - mappings dictionary (Dict[str, Any])
         """
-        logger.info("Processing data for LightFM model...")
+        LOGGER.info("Processing data for LightFM model...")
 
         # Create ID mappings
         self._create_id_mappings(users_df, items_df)

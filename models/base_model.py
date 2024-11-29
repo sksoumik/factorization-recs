@@ -1,3 +1,5 @@
+"""Base model interface module."""
+
 from abc import ABC, abstractmethod
 from typing import Any, Dict, Tuple
 
@@ -50,7 +52,7 @@ class BaseRecommender(ABC):
         """
 
     @abstractmethod
-    def recommend(
+    def recommend(  # pylint: disable=too-many-arguments
         self,
         user_id: int,
         user_features: csr_matrix,

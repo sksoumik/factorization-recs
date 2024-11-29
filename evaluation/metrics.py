@@ -1,8 +1,10 @@
+"""Evaluation metrics module for recommender system."""
+
 import numpy as np
 
 from utils.logger import Logger
 
-logger = Logger.get_logger()
+LOGGER = Logger.get_logger()
 
 
 class RecommenderMetrics:

@@ -1,3 +1,5 @@
+"""LightFM model implementation module."""
+
 from typing import Any, Dict, Optional, Tuple
 
 import numpy as np
@@ -7,7 +9,7 @@ from scipy.sparse import csr_matrix
 from models.base_model import BaseRecommender
 from utils.logger import Logger
 
-logger = Logger.get_logger()
+LOGGER = Logger.get_logger()
 
 
 class LightFMRecommender(BaseRecommender):
@@ -16,6 +18,7 @@ class LightFMRecommender(BaseRecommender):
     """
 
     def __init__(
+        # pylint: disable=too-many-arguments
         self,
         learning_rate: float = 0.05,
         loss: str = "warp",
@@ -68,7 +71,7 @@ class LightFMRecommender(BaseRecommender):
             num_threads (int): Number of threads to use
             **kwargs: Additional arguments for the model
         """
-        logger.info(
+        LOGGER.info(
             f"Training LightFM model with {num_epochs} epochs "
             f"and {num_threads} threads..."
         )
@@ -82,10 +85,10 @@ class LightFMRecommender(BaseRecommender):
                 num_threads=num_threads,
                 **kwargs,
             )
-            logger.info("Model training completed successfully")
+            LOGGER.info("Model training completed successfully")
 
         except Exception as e:
-            logger.error(f"Error during model training: {str(e)}")
+            LOGGER.error(f"Error during model training: {str(e)}")
             raise
 
     def predict(
@@ -117,10 +120,10 @@ class LightFMRecommender(BaseRecommender):
             return predictions
 
         except Exception as e:
-            logger.error(f"Error during prediction: {str(e)}")
+            LOGGER.error(f"Error during prediction: {str(e)}")
             raise
 
-    def recommend(
+    def recommend(  # pylint: disable=too-many-positional-arguments
         self,
         user_id: int,
         user_features: csr_matrix,
@@ -163,7 +166,7 @@ class LightFMRecommender(BaseRecommender):
             return top_items, top_scores
 
         except Exception as e:
-            logger.error(f"Error during recommendation: {str(e)}")
+            LOGGER.error(f"Error during recommendation: {str(e)}")
             raise
 
     def get_params(self) -> Dict[str, Any]:

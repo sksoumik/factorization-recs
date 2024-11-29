@@ -1,3 +1,5 @@
+"""Synthetic data generation module for recommender system."""
+
 import random
 from typing import Tuple
 
@@ -8,7 +10,7 @@ from faker import Faker
 from schemas.data_schemas import Interaction, ItemFeatures, UserFeatures
 from utils.logger import Logger
 
-logger = Logger.get_logger()
+LOGGER = Logger.get_logger()
 
 
 class DataGenerator:
@@ -71,7 +73,7 @@ class DataGenerator:
         Returns:
             pd.DataFrame: DataFrame containing user features
         """
-        logger.info(f"Generating {self.n_users} users...")
+        LOGGER.info(f"Generating {self.n_users} users...")
 
         users = []
         for _ in range(self.n_users):
@@ -101,7 +103,7 @@ class DataGenerator:
         Returns:
             pd.DataFrame: DataFrame containing item features
         """
-        logger.info(f"Generating {self.n_items} items...")
+        LOGGER.info(f"Generating {self.n_items} items...")
 
         items = []
         for _ in range(self.n_items):
@@ -135,7 +137,7 @@ class DataGenerator:
         Returns:
             pd.DataFrame: DataFrame containing interaction data
         """
-        logger.info(f"Generating {self.n_interactions} interactions...")
+        LOGGER.info(f"Generating {self.n_interactions} interactions...")
 
         interactions = []
         user_ids = users_df["user_id"].tolist()

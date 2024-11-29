@@ -1,3 +1,6 @@
+"""Main module for the recommender system pipeline."""
+
+import json
 import logging
 from pathlib import Path
 from typing import Any, Dict, Optional
@@ -9,7 +12,7 @@ from models.model_factory import ModelFactory
 from utils.config import ConfigManager
 from utils.logger import Logger
 
-logger = Logger.get_logger()
+LOGGER = Logger.get_logger()
 
 
 class RecommenderPipeline:
@@ -55,14 +58,14 @@ class RecommenderPipeline:
         """
         try:
             # Generate data
-            logger.info("Generating synthetic data...")
+            LOGGER.info("Generating synthetic data...")
             users_df, items_df, interactions_df = (
                 self.data_generator.generate_dataset()
             )
 
             # Process data
-            logger.info("Processing data...")
-            (interaction_matrix, user_features, item_features, mappings) = (
+            LOGGER.info("Processing data...")
+            (interaction_matrix, user_features, item_features, _) = (
                 self.data_processor.process_data(
                     users_df=users_df,
                     items_df=items_df,
@@ -71,13 +74,14 @@ class RecommenderPipeline:
             )
 
             # Create and evaluate model
-            logger.info("Creating model...")
+            LOGGER.info("Creating model...")
             model = ModelFactory.create_model(
-                model_type="lightfm", model_params=self.config.model.dict()
+                model_type="lightfm",
+                model_params=self.config.model.model_dump(),
             )
 
             # Perform cross-validation
-            logger.info("Performing cross-validation...")
+            LOGGER.info("Performing cross-validation...")
             mean_results, std_results = self.evaluator.cross_validate(
                 model=model,
                 interaction_matrix=interaction_matrix,
@@ -88,7 +92,7 @@ class RecommenderPipeline:
             )
 
             # Save results
-            results = {
+            results = {  # pylint: disable=redefined-outer-name
                 "mean_metrics": mean_results,
                 "std_metrics": std_results,
                 "config": self.config.dict(),
@@ -98,7 +102,7 @@ class RecommenderPipeline:
             return results
 
         except Exception as e:
-            logger.error(f"Pipeline failed: {str(e)}")
+            LOGGER.error(f"Pipeline failed: {str(e)}")
             raise
 
     def _save_results(self, results: Dict[str, Any]) -> None:
@@ -108,12 +112,10 @@ class RecommenderPipeline:
         Args:
             results (Dict[str, Any]): Results to save
         """
-        import json
-
         output_file = self.output_path / "results.json"
-        with open(output_file, "w") as f:
+        with open(output_file, "w", encoding="utf-8") as f:
             json.dump(results, f, indent=4)
-        logger.info(f"Results saved to {output_file}")
+        LOGGER.info(f"Results saved to {output_file}")
 
 
 if __name__ == "__main__":

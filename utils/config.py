@@ -1,3 +1,5 @@
+"""Configuration management module for the recommender system."""
+
 from pathlib import Path
 from typing import Any, Dict, Optional
 
@@ -71,7 +73,7 @@ class ConfigManager:
             Config: Configuration object
         """
         if self.config_path.exists():
-            with open(self.config_path, "r") as f:
+            with open(self.config_path, "r", encoding="utf-8") as f:
                 config_dict = yaml.safe_load(f)
             return Config(**config_dict)
         return Config()
@@ -79,7 +81,7 @@ class ConfigManager:
     def save_config(self) -> None:
         """Save configuration to file."""
         config_dict = self.config.dict()
-        with open(self.config_path, "w") as f:
+        with open(self.config_path, "w", encoding="utf-8") as f:
             yaml.safe_dump(config_dict, f)
 
     def get_config(self) -> Config:

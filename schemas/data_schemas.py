@@ -1,3 +1,5 @@
+"""Data schemas module defining the data models."""
+
 from datetime import datetime
 
 from pydantic import BaseModel, Field
