@@ -1,5 +1,4 @@
 SHELL := /bin/bash
-POETRY_CLI := $(shell which poetry)
 CONDA_ENV_NAME := recs   ## conda environment name
 
 # https://www.gnu.org/software/make/manual/make.html#Call-Function
@@ -24,13 +23,6 @@ clean-conda: ## Removes the conda environment
 	@echo "Removing conda environment: $(CONDA_ENV_NAME)"
 	conda env remove -n $(CONDA_ENV_NAME)
 
-poetry-check: ## Checks if poetry is installed
-ifeq ($(strip $(POETRY_CLI)),)
-	@echo "ERROR: Please install poetry first!"
-	exit 1
-else
-	@echo "Poetry is installed at: $(POETRY_CLI)"
-endif
 
 copy-env: ## Copies .env to .env.bak and creates a new one from .env.example
 	@echo "Your may lose .env.bak"
@@ -39,27 +31,13 @@ copy-env: ## Copies .env to .env.bak and creates a new one from .env.example
 		cp .env.example .env ; \
 	fi
 
-# poetry hits keyring for most operations which adds unnecessary (for us) dependency on keyring:
-# https://github.com/python-poetry/poetry/issues/1917#issuecomment-1235998997
-setup-no-dev-dependencies: ## Installs dependencies without dev dependencies
-	poetry env use python3.11
-	PYTHON_KEYRING_BACKEND=keyring.backends.fail.Keyring poetry install --without=dev
-
-setup-dev-dependencies: ## Installs dev dependencies
-	poetry env use python3.11
-	PYTHON_KEYRING_BACKEND=keyring.backends.fail.Keyring poetry install --only=dev
-
-setup-dependencies: ## Uses python3.11 for .venv and installs dependencies
-	poetry env use python3.11
-	PYTHON_KEYRING_BACKEND=keyring.backends.fail.Keyring poetry install
 
 setup-pre-commit: ## Installs pre-commit-hook
 	@echo "Installing pre-commit-hook"
 	poetry run pre-commit install
 
-setup-basic: poetry-check setup-no-dev-dependencies ## Sets up basic environment
 
-setup: setup-basic setup-dev-dependencies setup-pre-commit ## Sets up local-development environment
+setup: setup-conda setup-pre-commit ## Sets up local-development environment
 
 run: ## Runs the service locally using poetry
 
@@ -79,11 +57,6 @@ clean: ## Cleans up the local-development environment except .env
 	rm -f poetry.lock
 	rm -rf experiment_results
 
-merge-poetry-lock: ## Merges conflicted poetry.lock
-	git diff --quiet pyproject.toml	# Ensure no unstaged change in pyproject.toml
-	git checkout HEAD -- poetry.lock
-	poetry lock --no-update
-	git add poetry.lock
 
 #################################################################################
 # Formatting checks #############################################################
