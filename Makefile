@@ -56,6 +56,7 @@ clean: ## Cleans up the local-development environment except .env
 	rm -rf .venv
 	rm -f poetry.lock
 	rm -rf experiment_results
+	rm -rf logs
 
 
 #################################################################################
