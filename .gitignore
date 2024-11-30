@@ -52,6 +52,11 @@ logs/
 # Poetry
 poetry.lock
 
+# Project specific
 experiment_results/
 .DS_Store
 output/
+
+# MLflow
+mlruns/
+mlflow.db
