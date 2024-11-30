@@ -18,11 +18,13 @@ A recommender system implementation using LightFM, designed for experimentation 
   - Cross-validation support
   - Multiple evaluation metrics
   - Statistical analysis of results
+  - MLflow experiment tracking
 
 - **Experiment Management**
   - Configuration-based experiments
   - Result persistence and analysis
   - Automated reporting
+  - Experiment comparison and visualization
 
 ## Project Structure
 
@@ -34,6 +36,7 @@ A recommender system implementation using LightFM, designed for experimentation 
 ├── models/                 # Model implementations
 ├── schemas/                # Data schemas and validation
 ├── utils/                  # Utility functions and logging
+├── mlruns/                 # MLflow tracking directory
 └── config.yaml             # Default configuration
 ```
 
@@ -114,6 +117,30 @@ experiment_results/
 │   └── ...
 └── summary_results.csv       # Overall experiment summary
 ```
+
+### Experiment Tracking
+
+The project uses MLflow for experiment tracking and visualization:
+
+1. Start the MLflow UI:
+   ```bash
+   make mlflow-ui
+   ```
+
+2. View experiments at [http://localhost:5001](http://localhost:5001)
+
+MLflow tracks:
+- Model parameters
+- Training metrics
+- Dataset statistics
+- Performance metrics
+- Artifacts (configs, results)
+
+Compare experiments by:
+- Parameter values
+- Metric performance
+- Cross-validation results
+- Dataset characteristics
 
 ## Development
 
