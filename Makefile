@@ -80,7 +80,7 @@ format-isort: ## Fixes .py files with isort
 
 format-black: ## Fixes .py files with black
 	@echo "Fixing black formatting issues"
-	black . --line-length 79
+	black . --line-length 88
 
 format-unused-imports: ## Fixes unused imports and unused variables
 	@echo "Removing unused imports"
@@ -93,7 +93,7 @@ format: format-isort format-black format-unused-imports
 
 lint-flake8: ## Checks if .py files follow flake8
 	@echo "Checking flake8 errors"
-	flake8
+	flake8 --max-line-length=88 --extend-ignore=E203,W503
 
 lint-pylint: ## Checks if .py files follow pylint
 	@echo "Checking pylint errors"
