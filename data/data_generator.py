@@ -1,4 +1,17 @@
-"""Synthetic data generation module for recommender system."""
+"""
+Synthetic data generation module for recommender system.
+
+This module is responsible for generating realistic synthetic data that mimics
+e-commerce user-item interactions. It generates three types of data:
+1. User data with demographic and behavioral features
+2. Item data with product characteristics
+3. Interaction data representing user-item engagements
+
+The generated data follows patterns commonly seen in e-commerce platforms:
+- User features include age, location, device preferences
+- Item features include categories, prices, ratings
+- Interactions include views, cart additions, and purchases
+"""
 
 import random
 from typing import Tuple
@@ -15,7 +28,23 @@ LOGGER = Logger.get_logger()
 
 class DataGenerator:
     """
-    Generates synthetic data for the recommender system.
+    Synthetic data generator for recommender system testing and development.
+
+    This class provides functionality to generate three types of synthetic data:
+    1. User Data:
+       - Demographic information (age, gender, location)
+       - Platform behavior (device type, session time)
+       - Membership details (level, registration date)
+
+    2. Item Data:
+       - Product details (category, brand, price)
+       - Performance metrics (ratings, reviews)
+       - Inventory information (stock status, discounts)
+
+    3. Interaction Data:
+       - User-item engagement events (views, carts, purchases)
+       - Temporal information (timestamps, durations)
+       - Contextual data (device type, session)
     """
 
     def __init__(
@@ -25,15 +54,6 @@ class DataGenerator:
         n_interactions: int = 10000,
         random_seed: int = 42,
     ):
-        """
-        Initialize the data generator.
-
-        Args:
-            n_users (int): Number of users to generate
-            n_items (int): Number of items to generate
-            n_interactions (int): Number of interactions to generate
-            random_seed (int): Random seed for reproducibility
-        """
         self.n_users = n_users
         self.n_items = n_items
         self.n_interactions = n_interactions
@@ -68,10 +88,18 @@ class DataGenerator:
 
     def generate_users(self) -> pd.DataFrame:
         """
-        Generate synthetic user data.
+        Generate synthetic user profiles.
+
+        Creates a DataFrame of user profiles with realistic features:
+        - Unique user identifiers
+        - Demographic information (age, gender, location)
+        - Platform preferences (device type, browser)
+        - Behavioral metrics (session time, purchase history)
+        - Membership information (level, registration date)
 
         Returns:
-            pd.DataFrame: DataFrame containing user features
+            pd.DataFrame: DataFrame containing user profiles with features
+                matching the UserFeatures schema
         """
         LOGGER.info(f"Generating {self.n_users} users...")
 
@@ -98,10 +126,18 @@ class DataGenerator:
 
     def generate_items(self) -> pd.DataFrame:
         """
-        Generate synthetic item data.
+        Generate synthetic item catalog.
+
+        Creates a DataFrame of items with realistic product features:
+        - Unique item identifiers
+        - Product categorization (category, subcategory)
+        - Commercial attributes (price, brand, discount)
+        - Performance metrics (rating, review count)
+        - Inventory status (in stock, new item flag)
 
         Returns:
-            pd.DataFrame: DataFrame containing item features
+            pd.DataFrame: DataFrame containing item data with features
+                matching the ItemFeatures schema
         """
         LOGGER.info(f"Generating {self.n_items} items...")
 
@@ -128,14 +164,21 @@ class DataGenerator:
         self, users_df: pd.DataFrame, items_df: pd.DataFrame
     ) -> pd.DataFrame:
         """
-        Generate synthetic interaction data.
+        Generate synthetic user-item interactions.
+
+        Creates realistic interaction data between users and items:
+        - Links users and items through various interaction types
+        - Adds temporal aspects (timestamps, durations)
+        - Includes interaction context (device, session)
+        - Tracks conversion events and pricing
 
         Args:
-            users_df (pd.DataFrame): DataFrame containing user features
-            items_df (pd.DataFrame): DataFrame containing item features
+            users_df (pd.DataFrame): DataFrame containing user profiles
+            items_df (pd.DataFrame): DataFrame containing item catalog
 
         Returns:
-            pd.DataFrame: DataFrame containing interaction data
+            pd.DataFrame: DataFrame containing interaction data with
+                features matching the Interaction schema
         """
         LOGGER.info(f"Generating {self.n_interactions} interactions...")
 
@@ -168,11 +211,18 @@ class DataGenerator:
         self,
     ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
         """
-        Generate complete dataset including users, items, and interactions.
+        Generate complete synthetic dataset.
+
+        Creates a full dataset containing users, items, and their
+        interactions. Ensures consistency across all generated data
+        and maintains referential integrity between tables.
 
         Returns:
-            Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]: Tuple
-            containing users, items, and interactions DataFrames
+            Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]: A tuple
+            containing:
+                - users_df: DataFrame of user profiles
+                - items_df: DataFrame of item catalog
+                - interactions_df: DataFrame of user-item interactions
         """
         users_df = self.generate_users()
         items_df = self.generate_items()
