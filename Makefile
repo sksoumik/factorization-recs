@@ -1,5 +1,6 @@
 SHELL := /bin/bash
 CONDA_ENV_NAME := recs   ## conda environment name
+MLFLOW_PORT := 5001      ## MLflow UI port
 
 # https://www.gnu.org/software/make/manual/make.html#Call-Function
 confirm := read -r -p "⚠  Are you sure? [y/N] " response && [[ "$$response" =~ ^([yY][eE][sS]|[yY])$$ ]]
@@ -23,28 +24,21 @@ clean-conda: ## Removes the conda environment
 	@echo "Removing conda environment: $(CONDA_ENV_NAME)"
 	conda env remove -n $(CONDA_ENV_NAME)
 
+kill-mlflow: ## Kill any running MLflow UI processes
+	@echo "Killing any existing MLflow processes..."
+	-pkill -f "mlflow ui"
+	@echo "Waiting for processes to terminate..."
+	sleep 2
 
-copy-env: ## Copies .env to .env.bak and creates a new one from .env.example
-	@echo "Your may lose .env.bak"
-	@if $(call confirm); then \
-		cp .env .env.bak || true ; \
-		cp .env.example .env ; \
-	fi
-
+mlflow-ui: kill-mlflow ## Start MLflow UI with proper host configuration
+	@echo "Starting MLflow UI on port $(MLFLOW_PORT)..."
+	mlflow ui --host 0.0.0.0 --port $(MLFLOW_PORT)
 
 setup-pre-commit: ## Installs pre-commit-hook
 	@echo "Installing pre-commit-hook"
 	poetry run pre-commit install
 
-
 setup: setup-conda setup-pre-commit ## Sets up local-development environment
-
-run: ## Runs the service locally using poetry
-
-start: ## Starts the service using docker
-
-stop: ## Stops docker containers
-	docker compose down --remove-orphans
 
 clean: ## Cleans up the local-development environment except .env
 	rm -rf .mypy_cache
@@ -58,6 +52,8 @@ clean: ## Cleans up the local-development environment except .env
 	rm -rf experiment_results
 	rm -rf logs
 	rm -rf output
+	rm -rf mlruns
+	rm -f mlflow.db
 
 #################################################################################
 # Formatting checks #############################################################
