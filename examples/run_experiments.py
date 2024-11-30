@@ -146,19 +146,14 @@ def print_experiment_summary(results_df: pd.DataFrame) -> None:
 
 
 if __name__ == "__main__":
-    # set up output directory for saving exp results
     output_dir = Path("experiment_results")
     output_dir.mkdir(exist_ok=True)
 
     try:
-        # run experiments
         experiments = create_experiment_configs()
         results_df = run_experiments(output_dir, experiments)
 
-        # save summary results
         results_df.to_csv(output_dir / "summary_results.csv", index=False)
-
-        # print summary
         print_experiment_summary(results_df)
 
     except FileNotFoundError as e:
