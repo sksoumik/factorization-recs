@@ -54,3 +54,4 @@ poetry.lock
 
 experiment_results/
 .DS_Store
+output/
