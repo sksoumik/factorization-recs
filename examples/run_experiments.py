@@ -18,6 +18,7 @@ recommender system experiments. It supports:
    - Performance metric collection
    - Statistical analysis of results
    - Automated result visualization
+   - MLflow experiment tracking
 
 4. Output Management:
    - Structured result storage
@@ -30,6 +31,7 @@ import json
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
+import mlflow
 import pandas as pd
 import yaml
 
@@ -38,6 +40,66 @@ from main import RecommenderPipeline
 from utils.logger import Logger
 
 LOGGER = Logger.get_logger()
+EXPERIMENT_NAME = "Factorization Recommender System"
+
+
+def setup_mlflow() -> None:
+    """
+    Setup MLflow tracking.
+
+    Configures MLflow with:
+    - Local tracking URI
+    - Experiment creation/selection
+    - Artifact storage location
+    """
+    mlruns_dir = Path("mlruns")
+    mlruns_dir.mkdir(exist_ok=True)
+
+    mlflow.set_tracking_uri(mlruns_dir.absolute().as_uri())
+
+    experiment = mlflow.get_experiment_by_name(EXPERIMENT_NAME)
+    if experiment is None:
+        mlflow.create_experiment(name=EXPERIMENT_NAME)
+
+    mlflow.set_experiment(EXPERIMENT_NAME)
+
+
+def log_config_to_mlflow(config: Dict[str, Any], prefix: str = "") -> None:
+    """
+    Log configuration parameters to MLflow.
+
+    Recursively logs nested configuration with:
+    - Hierarchical parameter names
+    - Proper type handling
+    - Structured organization
+
+    Args:
+        config (Dict[str, Any]): Configuration dictionary
+        prefix (str): Prefix for nested parameters
+    """
+    for key, value in config.items():
+        param_name = f"{prefix}{key}" if prefix else key
+        if isinstance(value, dict):
+            log_config_to_mlflow(value, f"{param_name}_")
+        else:
+            mlflow.log_param(param_name, value)
+
+
+def format_metric_name(metric: str) -> str:
+    """
+    Format metric name to be MLflow compatible.
+
+    Replaces invalid characters with valid alternatives:
+    - '@' -> '_at_'
+    - Other invalid chars if needed
+
+    Args:
+        metric (str): Original metric name
+
+    Returns:
+        str: MLflow compatible metric name
+    """
+    return metric.replace("@", "_at_")
 
 
 def load_base_config(config_path: Path = Path("config.yaml")) -> Dict[str, Any]:
@@ -185,6 +247,7 @@ def run_experiments(
        - Aggregates metrics across experiments
        - Computes statistical measures
        - Saves detailed results
+       - Tracks in MLflow
 
     Args:
         experiment_dir (Path): Base directory for experiment outputs
@@ -201,6 +264,8 @@ def run_experiments(
     """
     experiment_results = []
 
+    setup_mlflow()
+
     for exp_config in experiment_configs:
         LOGGER.info(f"\nRunning experiment: {exp_config['name']}")
         exp_dir = experiment_dir / exp_config["name"]
@@ -208,44 +273,85 @@ def run_experiments(
 
         save_experiment_config(exp_config["config"], exp_dir)
 
-        # Generate and save synthetic data
-        LOGGER.info("Generating synthetic data...")
-        users_df, items_df, interactions_df = generate_synthetic_data(
-            exp_config["config"]
-        )
-        save_synthetic_data(users_df, items_df, interactions_df, exp_dir)
+        # start MLflow run
+        with mlflow.start_run(run_name=exp_config["name"]):
+            log_config_to_mlflow(exp_config["config"])
 
-        # create and run pipeline with this configuration
-        pipeline = RecommenderPipeline(
-            config_path=exp_dir / "config.yaml", output_path=exp_dir
-        )
-        current_results = pipeline.run()
+            LOGGER.info("Generating synthetic data...")
+            users_df, items_df, interactions_df = generate_synthetic_data(
+                exp_config["config"]
+            )
+            save_synthetic_data(users_df, items_df, interactions_df, exp_dir)
 
-        # collect results
-        for metric, mean_value in current_results["mean_metrics"].items():
-            std_value = current_results["std_metrics"][metric]
-            experiment_results.append(
+            mlflow.log_metrics(
                 {
-                    "experiment": exp_config["name"],
-                    "metric": metric,
-                    "mean": mean_value,
-                    "std": std_value,
+                    "n_users": len(users_df),
+                    "n_items": len(items_df),
+                    "n_interactions": len(interactions_df),
                 }
             )
 
-        # save results
-        with open(exp_dir / "results.json", "w", encoding="utf-8") as f:
-            json.dump(current_results, f, indent=4)
+            pipeline = RecommenderPipeline(
+                config_path=exp_dir / "config.yaml", output_path=exp_dir
+            )
+            current_results = pipeline.run()
+
+            for metric, mean_value in current_results["mean_metrics"].items():
+                std_value = current_results["std_metrics"][metric]
+                formatted_metric = format_metric_name(metric)
+                mlflow.log_metrics(
+                    {
+                        f"{formatted_metric}_mean": mean_value,
+                        f"{formatted_metric}_std": std_value,
+                    }
+                )
+
+            # collect results for DataFrame
+            for metric, mean_value in current_results["mean_metrics"].items():
+                std_value = current_results["std_metrics"][metric]
+                experiment_results.append(
+                    {
+                        "experiment": exp_config["name"],
+                        "metric": metric,
+                        "mean": mean_value,
+                        "std": std_value,
+                    }
+                )
+
+            # save results and log as artifacts
+            results_file = exp_dir / "results.json"
+            with open(results_file, "w", encoding="utf-8") as f:
+                json.dump(current_results, f, indent=4)
+            mlflow.log_artifact(results_file)
 
     return pd.DataFrame(experiment_results)
 
 
 def print_experiment_summary(results_df: pd.DataFrame) -> None:
     """
-    Print a summary of experiment results.
+    Generate a formatted summary of experiment results.
+
+    Creates a human-readable report with:
+    1. Experiment Overview:
+       - Configuration names
+       - Metric categories
+
+    2. Performance Metrics:
+       - Mean values with confidence intervals
+       - Standard deviations
+       - Formatted for readability
+
+    3. Visual Separation:
+       - Clear section boundaries
+       - Hierarchical organization
+       - Consistent formatting
 
     Args:
-        results_df (pd.DataFrame): DataFrame containing results
+        results_df (pd.DataFrame): Results data containing:
+            - experiment: Configuration identifier
+            - metric: Performance measure name
+            - mean: Average metric value
+            - std: Standard deviation
     """
     print("\nExperiment Results Summary:")
     print("=" * 80)
@@ -266,8 +372,12 @@ if __name__ == "__main__":
         experiments = create_experiment_configs()
         results_df = run_experiments(output_dir, experiments)
 
-        results_df.to_csv(output_dir / "summary_results.csv", index=False)
+        summary_file = output_dir / "summary_results.csv"
+        results_df.to_csv(summary_file, index=False)
+
         print_experiment_summary(results_df)
+
+        mlflow.log_artifact(summary_file)
 
     except FileNotFoundError as e:
         print(f"Error: {e}")
